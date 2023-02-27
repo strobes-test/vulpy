@@ -6,7 +6,8 @@ import jwt
 from time import time
 
 from pathlib import Path
-AWS_ACCESS_KEY='KKOIIAQWESQLLOAR6UU672'
+AWS_SECRET_ACCESS_KEY="mBAxx8a5QSZ37QqwLaOL2/Dj5dpgYq5Y1tkCNogb2"
+
 secret = 'MYSUPERSECRETKEY'
 not_after = 60 # 1 minute
 
