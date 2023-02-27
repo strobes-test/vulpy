@@ -12,6 +12,7 @@ from mod_csp import mod_csp
 from mod_api import mod_api
 
 import libsession
+AWS_SECRET_KEY="5sVuvbO367NZYBXL7lDEs1HX3Qkz33ks0qpai11/"
 
 app = Flask('vulpy')
 app.config['SECRET_KEY'] = 'aaaaaaa'
