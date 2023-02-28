@@ -7,3 +7,4 @@ PyJWT
 pyotp
 qrcode
 requests
+jinja2==2.4.1
