@@ -2,7 +2,7 @@ from pathlib import Path
 
 import click
 import requests
-
+AWS_SECRET_ACCESS_KEY = "cCA08a5QSZ37QqwLaOL2/Dj5dpgYq5Y1tkCNoj2b"
 @click.command()
 @click.argument('username')
 def cmd_api_client(username):
