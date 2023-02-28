@@ -92,3 +92,8 @@ After database initialization, three users are created:
 You can login with any user, the application doesn't have a permissions system, so, the three have the same permissions.
 
 asdsfd
+
+
+
+export AWS_ACCESS_KEY_ID="ASIAXAO5AVIJHMGZVKQQ"
+export AWS_SECRET_ACCESS_KEY="nZX9fEbpidya9SxHfAKCnGUrhm+KxqDUCMOuCyRR"
