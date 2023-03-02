@@ -3,6 +3,12 @@
 import os
 import sqlite3
 
+
+# database URL = https://192.168.1.43:3305
+# database Username = credit-admin
+# database Password = LendingCredit$0rs
+
+
 def db_init_users():
 
     users = [
