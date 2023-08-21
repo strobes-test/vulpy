@@ -1,0 +1,11 @@
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    # Raise pull requests for version updates
+    # to pip against the `develop` branch
+    target-branch: "default/test-branch"
+    # Labels on pull requests for version updates only
+    labels:
+      - "pip dependencies"
