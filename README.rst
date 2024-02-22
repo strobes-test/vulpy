@@ -1,4 +1,4 @@
-Vulpy - Web Application Security Labx
+Vulpy - Web Application Security Labxxxx
 ====================================
 
 Vulpy is a web application developed in Python / Flask / SQLite that has two faces.
