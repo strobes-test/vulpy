@@ -20,7 +20,7 @@ OWASP Application Security Verification Standard
 
 The "GOOD" version (not finished yet) will comply with the OWASP ASVS:
 
-https://www.owasp.org/index.php/Category:OWASP_Application_Security_Verification_Standard_Project
+https://www.owasp.org/index.php/Category:OWASP_Application_Security_Verification_Standard_Projectxx
 
 This will permit learn how to develop python code following the best security practices.
 
