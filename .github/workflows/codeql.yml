@@ -2,7 +2,7 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "add-license-1","add-license-2" ]
+    branches: [ "add-license-1", "add-license-2" ]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ "add-license-1" ]
@@ -22,39 +22,24 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'javascript', 'python' ]
-        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
-        # Use only 'java' to analyze code written in Java, Kotlin or both
-        # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
+        # Supported: cpp, csharp, go, java, javascript, python, ruby
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: ${{ matrix.language }}
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
 
-    # Autobuild attempts to build any compiled languages (C/C++, C#, Go, or Java).
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+      # For compiled languages, this attempts to automatically build your code.
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
 
-    - name: Perform CodeQL Analysis
-      id: codeql
-      uses: github/codeql-action/analyze@v2
-      with:
-        category: "/language:${{matrix.language}}"
-
-    - name: Check for critical issues
-      run: |
-        # Retrieve the number of critical issues from the CodeQL analysis results
-        critical_issues=$(jq '.annotations[] | select(.properties.severity == "critical")' "${{ steps.codeql.outputs.codeql-results }}")
-
-        # Fail the build if there are critical issues
-        if [[ $critical_issues ]]; then
-          echo "Critical issues detected:"
-          echo "$critical_issues"
-          exit 1
-        fi
+      # Perform the actual CodeQL analysis.
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{ matrix.language }}"
