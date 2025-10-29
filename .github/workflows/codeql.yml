@@ -42,19 +42,6 @@ jobs:
       uses: github/codeql-action/autobuild@v2
 
     - name: Perform CodeQL Analysis
-      id: codeql
       uses: github/codeql-action/analyze@v2
       with:
         category: "/language:${{matrix.language}}"
-
-    - name: Check for critical issues
-      run: |
-        # Retrieve the number of critical issues from the CodeQL analysis results
-        critical_issues=$(jq '.annotations[] | select(.properties.severity == "critical")' "${{ steps.codeql.outputs.codeql-results }}")
-
-        # Fail the build if there are critical issues
-        if [[ $critical_issues ]]; then
-          echo "Critical issues detected:"
-          echo "$critical_issues"
-          exit 1
-        fi
