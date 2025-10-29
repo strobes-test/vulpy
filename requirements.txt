@@ -27,3 +27,4 @@ tornado==4.5.1
 urllib3==1.21.1
 Werkzeug==0.14.1
 WTForms==2.2.1
+django==4.3.1
