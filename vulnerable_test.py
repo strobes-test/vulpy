@@ -93,6 +93,12 @@ def download_file():
     return response.read()
 
 
+@app.route('/xss')
+def xss():
+    """Cross-Site Scripting (XSS)"""
+    user_input = request.args.get('input')
+    return f"<script>alert('{user_input}')</script>"
+
 if __name__ == '__main__':
     # Vulnerable: Debug mode enabled and binding to all interfaces
     app.run(debug=True, host='0.0.0.0')

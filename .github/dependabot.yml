@@ -2,10 +2,22 @@ version: 2
 updates:
   - package-ecosystem: "pip"
     directory: "/"
-    # Raise pull requests for version updates
-    # to pip against the `develop` branch
-    target-branch: "default/test-branch"
-    # Labels on pull requests for version updates only
+    # Raise pull requests for version updates to pip against the add-license-1 branch
+    target-branch: "add-license-1"
+    labels:
+      - "pip dependencies"
+  
+  - package-ecosystem: "pip"
+    directory: "/"
+    # Raise pull requests for version updates to pip against the add-license-2 branch
+    target-branch: "add-license-2"
+    labels:
+      - "pip dependencies"
+  
+  - package-ecosystem: "pip"
+    directory: "/"
+    # Raise pull requests for version updates to pip against the add-license-4 branch
+    target-branch: "add-license-3"
     labels:
       - "pip dependencies"
 
