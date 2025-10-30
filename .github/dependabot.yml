@@ -1,4 +1,3 @@
-
 version: 2
 updates:
   - package-ecosystem: "pip"
@@ -9,3 +8,4 @@ updates:
     # Labels on pull requests for version updates only
     labels:
       - "pip dependencies"
+
