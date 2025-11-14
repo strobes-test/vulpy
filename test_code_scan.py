@@ -227,6 +227,346 @@ def cors_endpoint():
     return response
 
 
+# ========== CRITICAL VULNERABILITIES BELOW ==========
+
+@app.route('/api/rce', methods=['POST'])
+def remote_code_execution():
+    """CRITICAL: Remote Code Execution via compile() and exec()"""
+    code = request.json.get('code', '')
+    
+    # CRITICAL: Compiling and executing user-provided code
+    compiled_code = compile(code, '<string>', 'exec')
+    exec(compiled_code)
+    
+    return jsonify({"status": "executed"})
+
+
+@app.route('/api/xxe', methods=['POST'])
+def xml_external_entity():
+    """CRITICAL: XML External Entity (XXE) Injection"""
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+    
+    xml_data = request.data
+    
+    # CRITICAL: Parsing XML without disabling external entities
+    doc = minidom.parseString(xml_data)
+    return doc.toxml()
+
+
+@app.route('/api/ssrf')
+def server_side_request_forgery():
+    """CRITICAL: Server-Side Request Forgery"""
+    url = request.args.get('url', '')
+    
+    import urllib.request
+    import socket
+    
+    # CRITICAL: Fetching arbitrary URLs without validation
+    response = urllib.request.urlopen(url, timeout=10)
+    
+    # CRITICAL: Also vulnerable to internal network access
+    socket.gethostbyname(url)
+    
+    return response.read().decode('utf-8')
+
+
+@app.route('/api/pickle', methods=['POST'])
+def insecure_pickle_deserialize():
+    """CRITICAL: Insecure Pickle Deserialization"""
+    import pickle
+    import base64
+    
+    data = request.json.get('data', '')
+    
+    # CRITICAL: Pickle can execute arbitrary code during deserialization
+    decoded = base64.b64decode(data)
+    obj = pickle.loads(decoded)
+    
+    return jsonify({"deserialized": str(obj)})
+
+
+@app.route('/api/marshal', methods=['POST'])
+def insecure_marshal_deserialize():
+    """CRITICAL: Insecure Marshal Deserialization"""
+    import marshal
+    
+    data = request.data
+    
+    # CRITICAL: Marshal can deserialize arbitrary code objects
+    code_obj = marshal.loads(data)
+    exec(code_obj)
+    
+    return jsonify({"status": "executed"})
+
+
+@app.route('/api/idor/<resource_id>')
+def insecure_direct_object_reference(resource_id):
+    """CRITICAL: Insecure Direct Object Reference (IDOR)"""
+    user_id = session.get('user_id', None)
+    
+    # CRITICAL: No authorization check - users can access any resource
+    conn = psycopg2.connect(
+        host="localhost",
+        database="app_db",
+        user="app_user",
+        password=ADMIN_PASSWORD
+    )
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM resources WHERE id = {resource_id}")
+    result = cur.fetchone()
+    conn.close()
+    
+    return jsonify(result)
+
+
+@app.route('/api/mass_assignment', methods=['POST'])
+def mass_assignment():
+    """CRITICAL: Mass Assignment vulnerability"""
+    data = request.get_json()
+    
+    # CRITICAL: Direct assignment of all user data without whitelisting
+    user = {}
+    user.update(data)  # Allows setting any field including 'is_admin'
+    
+    # CRITICAL: Saving user with potentially elevated privileges
+    conn = psycopg2.connect(
+        host="localhost",
+        database="app_db",
+        user="app_user",
+        password=ADMIN_PASSWORD
+    )
+    cur = conn.cursor()
+    cur.execute(f"UPDATE users SET {', '.join([f'{k}={v}' for k, v in user.items()])}")
+    conn.commit()
+    conn.close()
+    
+    return jsonify({"updated": True})
+
+
+@app.route('/api/weak_random')
+def weak_random_generation():
+    """CRITICAL: Weak Random Number Generation"""
+    import random
+    import time
+    
+    # CRITICAL: Using predictable random seed
+    random.seed(int(time.time()))
+    token = random.randint(100000, 999999)
+    
+    # CRITICAL: Using weak random for cryptographic purposes
+    password = ''.join([chr(random.randint(65, 90)) for _ in range(8)])
+    
+    return jsonify({"token": token, "password": password})
+
+
+@app.route('/api/weak_hash')
+def weak_hash_algorithm():
+    """CRITICAL: Weak Hash Algorithm (SHA1)"""
+    import hashlib
+    
+    password = request.args.get('password', '')
+    
+    # CRITICAL: SHA1 is cryptographically broken
+    hash_value = hashlib.sha1(password.encode()).hexdigest()
+    
+    return jsonify({"hash": hash_value})
+
+
+@app.route('/api/weak_crypto')
+def weak_cryptography():
+    """CRITICAL: Weak Cryptographic Algorithm (DES)"""
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    
+    plaintext = request.args.get('data', '').encode()
+    
+    # CRITICAL: DES is cryptographically weak (56-bit key)
+    key = b"12345678"  # 8 bytes for DES
+    cipher = Cipher(algorithms.TripleDES(key), modes.ECB(), backend=default_backend())
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(plaintext) + encryptor.finalize()
+    
+    return ciphertext.hex()
+
+
+@app.route('/api/file_write', methods=['POST'])
+def insecure_file_write():
+    """CRITICAL: Insecure File Write Operation"""
+    filename = request.json.get('filename', '')
+    content = request.json.get('content', '')
+    
+    # CRITICAL: Writing files without path validation or access control
+    with open(f"/tmp/{filename}", 'w') as f:
+        f.write(content)
+    
+    # CRITICAL: Also allows overwriting system files
+    with open(f"/var/www/{filename}", 'w') as f:
+        f.write(content)
+    
+    return jsonify({"written": True})
+
+
+@app.route('/api/race_condition')
+def race_condition():
+    """CRITICAL: Race Condition in File Operations"""
+    import os
+    
+    filename = request.args.get('file', '')
+    
+    # CRITICAL: Time-of-check to time-of-use (TOCTOU) vulnerability
+    if os.path.exists(filename):
+        # Race condition: file could be deleted/modified here
+        with open(filename, 'r') as f:
+            return f.read()
+    
+    return jsonify({"error": "file not found"})
+
+
+@app.route('/api/insecure_redirect')
+def insecure_redirect():
+    """CRITICAL: Insecure Redirect without validation"""
+    next_url = request.args.get('next', '')
+    
+    # CRITICAL: Redirecting to unvalidated URL - allows phishing
+    return redirect(next_url)
+
+
+@app.route('/api/info_disclosure')
+def information_disclosure():
+    """CRITICAL: Information Disclosure"""
+    error = request.args.get('error', '')
+    
+    # CRITICAL: Exposing sensitive error information
+    try:
+        raise Exception(f"Database error: {error}")
+    except Exception as e:
+        # CRITICAL: Revealing stack traces and internal details
+        import traceback
+        return jsonify({
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "database_password": ADMIN_PASSWORD,
+            "secret_key": SECRET_TOKEN
+        })
+
+
+@app.route('/api/insecure_session')
+def insecure_session_management():
+    """CRITICAL: Insecure Session Management"""
+    user_id = request.args.get('user_id', '')
+    
+    # CRITICAL: Session fixation - accepting user-provided session ID
+    session['user_id'] = user_id
+    session['authenticated'] = True
+    
+    # CRITICAL: Long-lived sessions without timeout
+    session.permanent = True
+    
+    return jsonify({"session_id": session.sid})
+
+
+@app.route('/api/csrf', methods=['POST'])
+def csrf_vulnerability():
+    """CRITICAL: Missing CSRF Protection"""
+    # CRITICAL: No CSRF token validation
+    action = request.json.get('action', '')
+    amount = request.json.get('amount', 0)
+    
+    # CRITICAL: Performing sensitive action without CSRF check
+    if action == 'transfer':
+        # Transfer money without CSRF protection
+        return jsonify({"transferred": amount})
+    
+    return jsonify({"status": "processed"})
+
+
+@app.route('/api/insecure_api_key')
+def insecure_api_key():
+    """CRITICAL: Insecure API Key Handling"""
+    api_key = request.headers.get('X-API-Key', '')
+    
+    # CRITICAL: Hardcoded API key comparison
+    if api_key == "hardcoded-api-key-12345":
+        return jsonify({"authorized": True, "admin": True})
+    
+    # CRITICAL: API key in URL parameters (logged in access logs)
+    api_key_param = request.args.get('api_key', '')
+    if api_key_param == SECRET_TOKEN:
+        return jsonify({"authorized": True})
+    
+    return jsonify({"authorized": False})
+
+
+@app.route('/api/buffer_overflow')
+def potential_buffer_overflow():
+    """CRITICAL: Potential Buffer Overflow"""
+    data = request.args.get('data', '')
+    
+    # CRITICAL: No bounds checking on string operations
+    buffer = bytearray(100)
+    data_bytes = data.encode('utf-8')
+    
+    # CRITICAL: Potential buffer overflow if data > 100 bytes
+    for i in range(len(data_bytes)):
+        buffer[i] = data_bytes[i]
+    
+    return jsonify({"processed": True})
+
+
+@app.route('/api/insecure_error_handling')
+def insecure_error_handling():
+    """CRITICAL: Insecure Error Handling"""
+    try:
+        # CRITICAL: Catching all exceptions without proper handling
+        result = 1 / 0
+    except:
+        # CRITICAL: Generic exception handling exposes system details
+        import sys
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        return jsonify({
+            "error": str(exc_value),
+            "type": str(exc_type),
+            "traceback": str(exc_traceback),
+            "system_path": sys.path
+        })
+
+
+@app.route('/api/insecure_logging')
+def insecure_logging():
+    """CRITICAL: Insecure Logging of Sensitive Data"""
+    import logging
+    
+    username = request.json.get('username', '')
+    password = request.json.get('password', '')
+    credit_card = request.json.get('credit_card', '')
+    
+    # CRITICAL: Logging sensitive information
+    logging.info(f"User login attempt: username={username}, password={password}")
+    logging.debug(f"Credit card number: {credit_card}")
+    logging.error(f"Database connection failed with password: {ADMIN_PASSWORD}")
+    
+    return jsonify({"logged": True})
+
+
+@app.route('/api/insecure_config')
+def insecure_configuration():
+    """CRITICAL: Insecure Configuration"""
+    # CRITICAL: Debug mode enabled in production
+    app.config['DEBUG'] = True
+    
+    # CRITICAL: Weak session configuration
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_HTTPONLY'] = False
+    app.config['PERMANENT_SESSION_LIFETIME'] = 31536000  # 1 year - too long
+    
+    # CRITICAL: Exposing internal configuration
+    return jsonify({
+        "config": app.config,
+        "secret_key": app.config.get('SECRET_KEY'),
+        "debug": app.config.get('DEBUG')
+    })
+
+
 if __name__ == '__main__':
     # Vulnerable: Running without HTTPS and debug mode
     app.config['SECRET_KEY'] = SECRET_TOKEN
