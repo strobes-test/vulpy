@@ -13,10 +13,10 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "add-license-1", "add-license-2" ]
+    branches: [ "add-license-1", "add-license-2", "hotfixes/hotfix-correcting-kafka-config" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "add-license-1", "add-license-2" ]
+    branches: [ "add-license-1", "add-license-2", "hotfixes/hotfix-correcting-kafka-config" ]
   schedule:
     - cron: '33 13 * * 2'
 
