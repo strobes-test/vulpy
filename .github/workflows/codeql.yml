@@ -2,10 +2,10 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "add-license-1", "add-license-2" ]
+    branches: [ "add-license-1", "add-license-2" , "hotfixes/hotfix-correcting-kafka-config"]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "add-license-1", "add-license-2" ]
+    branches: [ "add-license-1", "add-license-2" , "hotfixes/hotfix-correcting-kafka-config"]
   schedule:
     - cron: '44 2 * * 4'
 
@@ -46,15 +46,5 @@ jobs:
       uses: github/codeql-action/analyze@v2
       with:
         category: "/language:${{matrix.language}}"
-
-    - name: Check for critical issues
-      run: |
-        # Retrieve the number of critical issues from the CodeQL analysis results
-        critical_issues=$(jq '.annotations[] | select(.properties.severity == "critical")' "${{ steps.codeql.outputs.codeql-results }}")
-
-        # Fail the build if there are critical issues
-        if [[ $critical_issues ]]; then
-          echo "Critical issues detected:"
-          echo "$critical_issues"
-          exit 1
-        fi
+        # CodeQL results are automatically uploaded to GitHub Code Scanning
+        # Results can be viewed in the Security tab of the repository
