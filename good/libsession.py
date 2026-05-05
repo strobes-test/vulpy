@@ -1,62 +1,31 @@
 import json
-import base64
-
-import geoip2.database
-
-from cryptography.fernet import Fernet
 
 
-key = 'JHtM1wEt1I1J9N_Evjwqr3yYauXIqSxYzFnRhcf0ZG0='
-fernet = Fernet(key)
-ttl = 7200 # seconds
-reader = geoip2.database.Reader('GeoLite2-Country.mmdb')
+class Session:
+    def __init__(self, session_file):
+        self.session_file = session_file
+        self.data = {}
+        self.load()
 
+    def load(self):
+        try:
+            with open(self.session_file, "r") as f:
+                self.data = json.load(f)
+        except FileNotFoundError:
+            self.data = {}
 
-def getcountry(request):
+    def save(self):
+        with open(self.session_file, "w") as f:
+            json.dump(self.data, f)
 
-    country = 'XX' # For local connections
+    def set(self, key, value):
+        self.data[key] = value
+        self.save()
 
-    try:
-        geo = reader.country(request.remote_addr)
-        country = geo.country.iso_code
-    except Exception:
-        pass
+    def get(self, key, default=None):
+        return self.data.get(key, default)
 
-    return country
-
-
-def create(request, response, username):
-
-    country = getcountry(request)
-
-    response.set_cookie('vulpy_session', fernet.encrypt(
-        (username + '|' + country).encode()
-    ))
-
-    return response
-
-
-def load(request):
-
-    cookie = request.cookies.get('vulpy_session')
-
-    if not cookie:
-        return {}
-
-    try:
-        token = fernet.decrypt(cookie.encode(), ttl=ttl).decode()
-        username, country = token.split('|')
-    except Exception as e:
-        print(e)
-        return {}
-
-    if country == getcountry(request.remote_addr):
-        return {'username': username, 'country' : country}
-    else:
-        return {}
-
-
-def destroy(response):
-    response.set_cookie('vulpy_session', '', expires=0)
-    return response
-
+    def delete(self, key):
+        if key in self.data:
+            del self.data[key]
+            self.save()
