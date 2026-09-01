@@ -6,7 +6,7 @@ This file contains intentional security vulnerabilities for testing purposes
 import os
 import sqlite3
 import hashlib
-from flask import Flask, request
+from flask import Flask, request, abort
 
 app = Flask(__name__)
 
@@ -48,8 +48,12 @@ def read_file():
     """Path Traversal vulnerability"""
     filepath = request.args.get('file')
     
-    # Vulnerable: No path validation
-    with open('/var/www/files/' + filepath, 'r') as f:
+    base_dir = '/var/www/files/'
+    # Resolve the requested path and confirm it stays within base_dir
+    full_path = os.path.realpath(os.path.join(base_dir, filepath))
+    if os.path.commonpath([full_path, os.path.realpath(base_dir)]) != os.path.realpath(base_dir):
+        abort(403)
+    with open(full_path, 'r') as f:
         content = f.read()
     
     return content
