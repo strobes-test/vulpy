@@ -6,6 +6,7 @@ Contains more security vulnerabilities for comprehensive testing
 import pickle
 import xml.etree.ElementTree as ET
 import subprocess
+import shlex
 import yaml
 from flask import Flask, request, render_template_string, redirect
 
@@ -65,8 +66,7 @@ def run_command():
     """Command Injection with subprocess"""
     cmd = request.args.get('cmd')
     
-    # Vulnerable: shell=True with user input
-    result = subprocess.run(cmd, shell=True, capture_output=True)
+    result = subprocess.run(shlex.split(cmd), shell=False, capture_output=True)
     
     return result.stdout
 
