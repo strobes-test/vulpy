@@ -76,8 +76,7 @@ def load_yaml():
     """Insecure YAML deserialization"""
     yaml_data = request.data
     
-    # Vulnerable: yaml.load without safe_load
-    data = yaml.load(yaml_data, Loader=yaml.Loader)
+    data = yaml.safe_load(yaml_data)
     
     return str(data)
 
